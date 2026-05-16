@@ -1,0 +1,27 @@
+{
+  "id": "placeholder",
+  "timestamp": 0,
+  "pipeline": {
+    "workflow": "send-report.yml",
+    "runNumber": 0,
+    "commit": "placeholder",
+    "branch": "main",
+    "status": "success"
+  },
+  "target": "https://staging.example.com",
+  "stages": [
+    { "name": "Nmap",      "status": "success", "findings": 1, "durationMs": 38900  },
+    { "name": "OWASP ZAP", "status": "success", "findings": 3, "durationMs": 289100 },
+    { "name": "Trivy",     "status": "success", "findings": 2, "durationMs": 55400  },
+    { "name": "Nikto",     "status": "success", "findings": 1, "durationMs": 91200  }
+  ],
+  "findings": [
+    { "tool": "OWASP ZAP", "severity": "high",   "title": "Cookies without Secure flag",    "description": "Session cookies transmitted without the Secure attribute.",        "target": "Set-Cookie: session=…" },
+    { "tool": "Trivy",     "severity": "medium",  "title": "CVE-2025-1234 in libcurl",      "description": "Out-of-bounds read in libcurl < 8.7.0.",                            "target": "image: app:latest"     },
+    { "tool": "OWASP ZAP", "severity": "medium",  "title": "Missing CSRF token",            "description": "/account/update accepts POST without anti-CSRF token.",             "target": "POST /account/update"  },
+    { "tool": "OWASP ZAP", "severity": "medium",  "title": "Insecure cookie SameSite",      "description": "Session cookie missing SameSite=Strict attribute.",                "target": "Set-Cookie: session=…" },
+    { "tool": "Nikto",     "severity": "medium",  "title": "Server header leaks version",   "description": "Header 'Server: nginx/1.18.0' discloses exact version.",            "target": "GET /"                 },
+    { "tool": "Trivy",     "severity": "low",     "title": "Outdated package: tzdata",      "description": "tzdata is several minor versions behind.",                          "target": "image: app:latest"     },
+    { "tool": "Nmap",      "severity": "low",     "title": "Port 22 (SSH) open",            "description": "OpenSSH 8.9p1 — consider restricting to known source IPs.",         "target": "tcp/22"                }
+  ]
+}

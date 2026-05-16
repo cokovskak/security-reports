@@ -1,0 +1,32 @@
+{
+  "id": "placeholder",
+  "timestamp": 0,
+  "pipeline": {
+    "workflow": "send-report.yml",
+    "runNumber": 0,
+    "commit": "placeholder",
+    "branch": "main",
+    "status": "failure"
+  },
+  "target": "https://staging.example.com",
+  "stages": [
+    { "name": "Nmap",      "status": "success", "findings": 3, "durationMs": 41200  },
+    { "name": "OWASP ZAP", "status": "failure", "findings": 5, "durationMs": 318400 },
+    { "name": "Trivy",     "status": "failure", "findings": 2, "durationMs": 61200  },
+    { "name": "Nikto",     "status": "success", "findings": 2, "durationMs": 98800  }
+  ],
+  "findings": [
+    { "tool": "OWASP ZAP", "severity": "critical", "title": "SQL Injection on /api/login",     "description": "POST parameter 'username' is vulnerable to error-based SQL injection.", "target": "POST /api/login"        },
+    { "tool": "Trivy",     "severity": "critical", "title": "CVE-2024-0001 in openssl 3.0.2",  "description": "Container base image ships vulnerable openssl. Upgrade to 3.0.13+.",     "target": "image: app:latest"      },
+    { "tool": "Nmap",      "severity": "high",     "title": "Port 6379 (Redis) exposed",       "description": "Redis listening on public interface with no authentication.",             "target": "tcp/6379"               },
+    { "tool": "OWASP ZAP", "severity": "high",     "title": "Reflected XSS in search query",   "description": "Parameter 'q' is reflected without HTML-encoding.",                      "target": "GET /search?q="         },
+    { "tool": "OWASP ZAP", "severity": "high",     "title": "Cookies without Secure flag",     "description": "Session cookies transmitted without the Secure attribute.",               "target": "Set-Cookie: session=…"  },
+    { "tool": "Trivy",     "severity": "medium",   "title": "CVE-2025-1234 in libcurl",        "description": "Out-of-bounds read in libcurl < 8.7.0.",                                  "target": "image: app:latest"      },
+    { "tool": "OWASP ZAP", "severity": "medium",   "title": "Missing CSRF token",              "description": "/account/update accepts POST without anti-CSRF token.",                   "target": "POST /account/update"   },
+    { "tool": "Nikto",     "severity": "medium",   "title": "Server header leaks version",     "description": "Header 'Server: nginx/1.18.0' discloses exact version.",                  "target": "GET /"                  },
+    { "tool": "Nmap",      "severity": "low",      "title": "Port 22 (SSH) open",              "description": "OpenSSH 8.9p1 — consider restricting to known source IPs.",               "target": "tcp/22"                 },
+    { "tool": "Nmap",      "severity": "low",      "title": "Port 80 (HTTP) open",             "description": "Plaintext HTTP exposed alongside HTTPS.",                                  "target": "tcp/80"                 },
+    { "tool": "Nikto",     "severity": "low",      "title": "Missing X-Frame-Options",         "description": "Click-jacking protection header not set.",                                "target": "GET /"                  },
+    { "tool": "OWASP ZAP", "severity": "low",      "title": "X-Content-Type-Options not set",  "description": "nosniff header is missing.",                                               "target": "GET /"                  }
+  ]
+}
