@@ -1,0 +1,90 @@
+name: Send Pentest Report
+
+on:
+  # Manual trigger with a dropdown to pick the report type
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: "Which report to send?"
+        required: true
+        default: "critical"
+        type: choice
+        options:
+          - critical
+          - medium
+          - clean
+
+  # Also runs automatically every day at 08:00 UTC (sends critical by default)
+  schedule:
+    - cron: "0 8 * * *"
+
+  # And on every push to main
+  push:
+    branches: [main]
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick report type
+        id: pick
+        run: |
+          # workflow_dispatch sets the input; push/schedule default to "critical"
+          TYPE="${{ github.event.inputs.report_type || 'critical' }}"
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "Sending report type: $TYPE"
+
+      - name: Inject run metadata into report
+        run: |
+          RUN_ID="run-$(date +%Y-%m-%d)-${{ github.run_number }}"
+          TIMESTAMP=$(date +%s000)
+
+          jq \
+            --arg  id      "$RUN_ID" \
+            --argjson ts   $TIMESTAMP \
+            --argjson run  ${{ github.run_number }} \
+            --arg  commit  "${{ github.sha }}" \
+            --arg  branch  "${{ github.ref_name }}" \
+            '
+              .id                  = $id   |
+              .timestamp           = $ts   |
+              .pipeline.runNumber  = $run  |
+              .pipeline.commit     = $commit |
+              .pipeline.branch     = $branch
+            ' \
+            reports/scan-${{ steps.pick.outputs.type }}.json > report.json
+
+          echo "Report ready:"
+          jq '{id, timestamp, pipeline_status: .pipeline.status, findings: (.findings | length)}' report.json
+
+      - name: Send report to PWA backend
+        env:
+          BACKEND_URL:  ${{ secrets.BACKEND_URL }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+        run: |
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" \
+            -X POST "$BACKEND_URL/api/reports" \
+            -H "Authorization: Bearer $INGEST_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @report.json)
+
+          echo "HTTP $HTTP_CODE"
+          cat response.json
+
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "Backend returned $HTTP_CODE — check BACKEND_URL and INGEST_TOKEN secrets"
+            exit 1
+          fi
+
+          echo "Report sent. Push notifications fired:"
+          jq '.push' response.json
+
+      - name: Upload report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pentest-report-${{ github.run_number }}-${{ steps.pick.outputs.type }}
+          path: report.json
